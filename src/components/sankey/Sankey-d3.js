@@ -1,7 +1,8 @@
 import * as d3 from 'd3'
+import { generateSankeyData, formatDimensionLabel } from './sankeyDataUtils'
 
 class SankeyD3 {
-    margin = {top: 50, right: 150, bottom: 50, left: 150};
+    margin = {top: 20, right: 90, bottom: 30, left: 90};
     size;
     height;
     width;
@@ -46,84 +47,6 @@ class SankeyD3 {
         this.matSvg.append("g").attr("class", "overlays-group");
     }
 
-    // Data transformation: convert housing data to nodes and links
-    generateSankeyData(data, dimensions) {
-        const nodes = [];
-        const links = [];
-        const nodeMap = new Map();
-
-        if (!data || data.length === 0 || !dimensions || dimensions.length === 0) {
-            return { nodes, links };
-        }
-
-        // Create nodes for each dimension value
-        dimensions.forEach((dim, dimIndex) => {
-            const uniqueValues = [...new Set(data.map(d => d[dim]))].sort();
-            uniqueValues.forEach(value => {
-                const nodeId = `${dim}-${value}`;
-                const housesWithValue = data.filter(house => house[dim] === value);
-                nodes.push({
-                    id: nodeId,
-                    name: this.formatValue(value, dim),
-                    dimension: dim,
-                    value: value,
-                    dimIndex: dimIndex,
-                    houses: housesWithValue,
-                    count: housesWithValue.length
-                });
-                nodeMap.set(nodeId, nodes.length - 1);
-            });
-        });
-
-        // Create links between consecutive dimensions
-        for (let i = 0; i < dimensions.length - 1; i++) {
-            const sourceDim = dimensions[i];
-            const targetDim = dimensions[i + 1];
-
-            // Count transitions and store houses
-            const transitions = new Map();
-            data.forEach(house => {
-                const sourceId = `${sourceDim}-${house[sourceDim]}`;
-                const targetId = `${targetDim}-${house[targetDim]}`;
-                const key = `${sourceId}->${targetId}`;
-
-                if (!transitions.has(key)) {
-                    transitions.set(key, {
-                        count: 0,
-                        houses: []
-                    });
-                }
-                const transition = transitions.get(key);
-                transition.count++;
-                transition.houses.push(house);
-            });
-
-            // Create links
-            transitions.forEach((transitionData, key) => {
-                const [sourceId, targetId] = key.split('->');
-                links.push({
-                    source: nodeMap.get(sourceId),
-                    target: nodeMap.get(targetId),
-                    value: transitionData.count,
-                    houses: transitionData.houses
-                });
-            });
-        }
-
-        return { nodes, links };
-    }
-
-    // Format values for display
-    formatValue(value, dimension) {
-        // For numeric dimensions, add labels
-        if (dimension === 'bedrooms') return `${value} bed`;
-        if (dimension === 'bathrooms') return `${value} bath`;
-        if (dimension === 'stories') return `${value} story`;
-        if (dimension === 'parking') return `${value} park`;
-
-        // For categorical, use as-is
-        return String(value);
-    }
 
     // Custom Sankey layout algorithm
     computeSankeyLayout(nodes, links, visData) {
@@ -167,18 +90,14 @@ class SankeyD3 {
             });
         });
 
-        // Assign nodes to links and compute widths based on a global scale
-        const totalDataCount = visData.length;
-        const heightScale = this.height / totalDataCount; // pixels per house
-
+        // Assign node references to links
         links.forEach(link => {
             link.sourceNode = nodes[link.source];
             link.targetNode = nodes[link.target];
-            // Width is directly proportional to the number of houses
-            link.width = link.value * heightScale;
         });
 
         // Calculate link y positions at source and target
+        // This will also compute sourceWidth and targetWidth to fit exactly within nodes
         this.computeLinkPositions(nodes, links);
     }
 
@@ -188,48 +107,48 @@ class SankeyD3 {
         const linksBySource = d3.group(links, d => d.source);
         const linksByTarget = d3.group(links, d => d.target);
 
-        // Calculate source y positions
+        // Calculate source y positions with proper scaling to fit node height
         linksBySource.forEach((nodeLinks, nodeIndex) => {
             const node = nodes[nodeIndex];
             nodeLinks.sort((a, b) => b.value - a.value);
 
+            // Calculate total value of outgoing links
+            const totalValue = d3.sum(nodeLinks, l => l.value);
+            // Scale to fit exactly within node height
+            const scale = node.height / totalValue;
+
             let y = node.y0;
             nodeLinks.forEach(link => {
                 link.y0 = y;
-                y += link.width;
+                link.sourceWidth = link.value * scale;
+                y += link.sourceWidth;
             });
         });
 
-        // Calculate target y positions
+        // Calculate target y positions with proper scaling to fit node height
         linksByTarget.forEach((nodeLinks, nodeIndex) => {
             const node = nodes[nodeIndex];
             nodeLinks.sort((a, b) => b.value - a.value);
 
+            // Calculate total value of incoming links
+            const totalValue = d3.sum(nodeLinks, l => l.value);
+            // Scale to fit exactly within node height
+            const scale = node.height / totalValue;
+
             let y = node.y0;
             nodeLinks.forEach(link => {
                 link.y1 = y;
-                y += link.width;
+                link.targetWidth = link.value * scale;
+                y += link.targetWidth;
             });
         });
+
     }
 
-    // Generate SVG path for a link (cubic Bezier curve)
-    linkPath(d) {
-        const x0 = d.sourceNode.x1;
-        const x1 = d.targetNode.x0;
-        const xi = d3.interpolateNumber(x0, x1);
-        const x2 = xi(0.5);
-        const x3 = xi(0.5);
-        const y0 = d.y0 + d.width / 2;
-        const y1 = d.y1 + d.width / 2;
-
-        return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}`;
-    }
-
-    // Generate SVG path for a link as a ribbon (filled shape)
+    // Generate SVG path for a link as a ribbon (filled shape) - d3-sankey style
     linkRibbon(d) {
         // Validate that all required properties exist
-        if (!d.sourceNode || !d.targetNode || d.y0 === undefined || d.y1 === undefined || !d.width) {
+        if (!d.sourceNode || !d.targetNode || d.y0 === undefined || d.y1 === undefined || !d.sourceWidth || !d.targetWidth) {
             console.warn("Invalid link data:", d);
             return "";
         }
@@ -239,10 +158,12 @@ class SankeyD3 {
         const xi = d3.interpolateNumber(x0, x1);
         const x2 = xi(0.5);
         const x3 = xi(0.5);
+
+        // Use sourceWidth at source and targetWidth at target for proper fit
         const y00 = d.y0;
-        const y10 = d.y0 + d.width;
+        const y10 = d.y0 + d.sourceWidth;
         const y01 = d.y1;
-        const y11 = d.y1 + d.width;
+        const y11 = d.y1 + d.targetWidth;
 
         // Check for NaN values
         if (isNaN(x0) || isNaN(x1) || isNaN(y00) || isNaN(y01) || isNaN(y10) || isNaN(y11)) {
@@ -265,7 +186,7 @@ class SankeyD3 {
         this.controllerMethods = controllerMethods;
 
         // Generate sankey data structure
-        const { nodes, links } = this.generateSankeyData(visData, activeDimensions);
+        const { nodes, links } = generateSankeyData(visData, activeDimensions);
 
         // Compute layout
         this.computeSankeyLayout(nodes, links, visData);
@@ -290,39 +211,37 @@ class SankeyD3 {
         this.currentNodes = nodes;
         this.currentLinks = links;
 
-        // Render links (ribbons)
+        // Render links as filled flow areas (ribbons) like d3-sankey
         const linksGroup = this.matSvg.select(".links-group");
+
         linksGroup.selectAll(".sankey-link")
             .data(links, (d, i) => `${d.sourceNode.id}-${d.targetNode.id}`)
             .join(
                 enter => {
-                    const linkG = enter.append("path")
+                    enter.append("path")
                         .attr("class", "sankey-link")
                         .attr("d", d => this.linkRibbon(d))
-                        .attr("fill", "#aaa")
-                        .attr("fill-opacity", 0.5)
-                        .attr("stroke", "none")
-                        .on("mouseenter", (event, d) => {
-                            d3.select(event.target)
-                                .attr("fill-opacity", 0.8);
-                        })
-                        .on("mouseleave", (event, d) => {
-                            d3.select(event.target)
-                                .attr("fill-opacity", 0.5);
+                        .on("click", (event, d) => {
+                            // Clear all existing selections and select source and target nodes
+                            this.selectedBoxes.clear();
+                            this.selectedBoxes.add(d.sourceNode.id);
+                            this.selectedBoxes.add(d.targetNode.id);
+                            this.handleSelectionUpdate();
                         });
-                    return linkG;
                 },
                 update => {
                     update
-                        .attr("d", d => this.linkRibbon(d))
-                        .attr("fill-opacity", 0.5);
-                    return update;
+                        .on("click", (event, d) => {
+                            // Clear all existing selections and select source and target nodes
+                            this.selectedBoxes.clear();
+                            this.selectedBoxes.add(d.sourceNode.id);
+                            this.selectedBoxes.add(d.targetNode.id);
+                            this.handleSelectionUpdate();
+                        })
+                        .attr("d", d => this.linkRibbon(d));
                 },
                 exit => {
-                    exit.transition()
-                        .duration(this.transitionDuration)
-                        .attr("fill-opacity", 0)
-                        .remove();
+                    exit.remove();
                 }
             );
 
@@ -333,24 +252,21 @@ class SankeyD3 {
             .join(
                 enter => {
                     const nodeG = enter.append("g")
-                        .attr("class", "sankey-node");
+                        .attr("class", "sankey-node node-default");
 
-                    // Node rectangle - default light gray
+                    // Node rectangle - styling via CSS classes
                     nodeG.append("rect")
                         .attr("x", d => d.x0)
                         .attr("y", d => d.y0)
                         .attr("width", d => d.x1 - d.x0)
-                        .attr("height", d => d.height)
-                        .attr("fill", "#d3d3d3")
-                        .attr("stroke", "#999")
-                        .attr("stroke-width", 1);
+                        .attr("height", d => d.height);
 
-                    // Node label
+                    // Node label - position based on dimension index
                     nodeG.append("text")
-                        .attr("x", d => d.x0 - 6)
+                        .attr("x", d => d.dimIndex === 0 ? d.x0 - 6 : d.x1 + 6)
                         .attr("y", d => (d.y0 + d.y1) / 2)
                         .attr("dy", "0.35em")
-                        .attr("text-anchor", "end")
+                        .attr("text-anchor", d => d.dimIndex === 0 ? "end" : "start")
                         .attr("font-size", "11px")
                         .attr("fill", "#333")
                         .text(d => `${d.name} (${d.count})`);
@@ -374,17 +290,15 @@ class SankeyD3 {
                         .attr("height", d => d.height);
 
                     update.select("text")
-                        .attr("x", d => d.x0 - 6)
+                        .attr("x", d => d.dimIndex === 0 ? d.x0 - 6 : d.x1 + 6)
                         .attr("y", d => (d.y0 + d.y1) / 2)
+                        .attr("text-anchor", d => d.dimIndex === 0 ? "end" : "start")
                         .text(d => `${d.name} (${d.count})`);
 
                     return update;
                 },
                 exit => {
-                    exit.transition()
-                        .duration(this.transitionDuration)
-                        .style("opacity", 0)
-                        .remove();
+                    exit.remove();
                 }
             );
 
@@ -417,7 +331,7 @@ class SankeyD3 {
                     .attr("font-size", "12px")
                     .attr("font-weight", "600")
                     .attr("fill", "#555")
-                    .attr("y", this.height + 35);
+                    .attr("y", this.height + 25);
 
                 return labelG;
             },
@@ -435,27 +349,11 @@ class SankeyD3 {
 
                     d3.select(nodes[i]).select("text")
                         .attr("x", x)
-                        .text(this.formatDimensionLabel(dimension));
+                        .text(formatDimensionLabel(dimension));
                 }
             });
     }
 
-    formatDimensionLabel(dimension) {
-        const labels = {
-            'bedrooms': 'Bedrooms',
-            'bathrooms': 'Bathrooms',
-            'stories': 'Stories',
-            'parking': 'Parking',
-            'mainroad': 'Main Road',
-            'guestroom': 'Guest Room',
-            'basement': 'Basement',
-            'hotwaterheating': 'Hot Water',
-            'airconditioning': 'Air Conditioning',
-            'prefarea': 'Preferred Area',
-            'furnishingstatus': 'Furnishing'
-        };
-        return labels[dimension] || dimension;
-    }
 
     updateNodeHighlighting(){
         // Update node appearances based on selected items and selected boxes
@@ -480,41 +378,29 @@ class SankeyD3 {
                 // Check if this box is selected by clicking
                 const isBoxSelected = this.selectedBoxes.has(d.id);
 
-                // Determine visual state - three states:
-                // 1. Light gray (#d3d3d3) - default state, no selection
-                // 2. Gray (#808080) - data selected from scatterplot flows through this node
-                // 3. Orange/Red (#ff6b6b) - box is selected by clicking
-                let fillColor, strokeColor, strokeWidth;
+                // Determine visual state and apply appropriate CSS class
+                // Three states:
+                // 1. node-default - default state, no selection
+                // 2. node-data-flow - data selected from scatterplot flows through this node
+                // 3. node-selected - box is selected by clicking
+
+                // Remove all state classes
+                node.classed("node-default", false)
+                    .classed("node-data-flow", false)
+                    .classed("node-selected", false);
 
                 if (isBoxSelected) {
-                    // State 3: Box is selected by clicking - bright orange/red fill
-                    fillColor = "#ff6b6b";
-                    strokeColor = "#d63031";
-                    strokeWidth = 3;
-                    console.log("Node", d.name, "is SELECTED - applying orange/red");
+                    // State 3: Box is selected by clicking
+                    node.classed("node-selected", true);
+                    console.log("Node", d.name, "is SELECTED");
                 } else if (selectedIndices.size > 0 && matchingCount > 0) {
-                    // State 2: Selected data flows through this node - gray
-                    fillColor = "#808080";
-                    strokeColor = "#333";
-                    strokeWidth = 1;
-                    console.log("Node", d.name, "has data flowing through - applying gray");
+                    // State 2: Selected data flows through this node
+                    node.classed("node-data-flow", true);
+                    console.log("Node", d.name, "has data flowing through");
                 } else {
-                    // State 1: Default state - light gray
-                    fillColor = "#d3d3d3";
-                    strokeColor = "#999";
-                    strokeWidth = 1;
+                    // State 1: Default state
+                    node.classed("node-default", true);
                 }
-
-                // Update rectangle appearance with transition
-                node.select("rect")
-                    .transition()
-                    .duration(300)
-                    .attr("fill", fillColor)
-                    .attr("stroke", strokeColor)
-                    .attr("stroke-width", strokeWidth);
-
-                // Remove any old selection indicator (dashed outline)
-                node.select(".selection-indicator").remove();
 
                 // Update label to show matching count if data flows through
                 const textElement = node.select("text");
@@ -625,66 +511,33 @@ class SankeyD3 {
         // Update node highlighting
         this.updateNodeHighlighting();
 
-        // Clear previous overlays
-        const overlaysGroup = this.matSvg.select(".overlays-group");
-        overlaysGroup.selectAll(".overlay-path").remove();
+        // Highlight flows for selected items
+        this.highlightFlowsForSelection(selectedItems);
+    }
 
+    // Highlight flows that contain selected items
+    highlightFlowsForSelection(selectedItems) {
         if (!selectedItems || selectedItems.length === 0) {
+            // Reset all flows to default style
+            this.matSvg.selectAll(".sankey-link")
+                .classed("link-selected", false)
+                .classed("link-dimmed", false);
             return;
         }
 
-        // Limit number of overlay paths for performance
-        const maxOverlays = 50;
-        const itemsToShow = selectedItems.slice(0, maxOverlays);
+        // Create a set of selected item indices for quick lookup
+        const selectedIndices = new Set(selectedItems.map(item => item.index));
 
-        // Draw overlay path for each selected house
-        itemsToShow.forEach(house => {
-            const path = this.computeHousePath(house);
-            if (path && path.length > 1) {
-                // Create line generator
-                const lineGenerator = d3.line()
-                    .x(d => d.x)
-                    .y(d => d.y)
-                    .curve(d3.curveMonotoneX);
+        // Update each link
+        this.matSvg.selectAll(".sankey-link")
+            .each(function(linkData) {
+                // Check if this link contains any selected items
+                const hasSelectedItems = linkData.houses.some(house => selectedIndices.has(house.index));
 
-                overlaysGroup.append("path")
-                    .attr("class", "overlay-path")
-                    .attr("d", lineGenerator(path))
-                    .attr("stroke", "#00b894")
-                    .attr("stroke-width", 2)
-                    .attr("fill", "none")
-                    .attr("opacity", 0)
-                    .transition()
-                    .duration(300)
-                    .attr("opacity", 1);
-            }
-        });
-    }
-
-    // Compute the path of a house through the current dimensions
-    computeHousePath(house) {
-        if (!this.currentNodes || this.currentNodes.length === 0) {
-            return null;
-        }
-
-        const path = [];
-
-        // Find the nodes this house passes through
-        this.currentNodes.forEach(node => {
-            if (house[node.dimension] === node.value) {
-                // House passes through this node
-                path.push({
-                    x: (node.x0 + node.x1) / 2,
-                    y: (node.y0 + node.y1) / 2,
-                    dimIndex: node.dimIndex
-                });
-            }
-        });
-
-        // Sort by dimension index
-        path.sort((a, b) => a.dimIndex - b.dimIndex);
-
-        return path;
+                d3.select(this)
+                    .classed("link-selected", hasSelectedItems)
+                    .classed("link-dimmed", !hasSelectedItems);
+            });
     }
 
     clear = function(){

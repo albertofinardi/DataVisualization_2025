@@ -30,45 +30,41 @@ function ScatterplotContainer({scatterplotData, xAttribute, yAttribute, selected
     useEffect(()=>{
         console.log("ScatterplotContainer useEffect [] called once the component did mount");
 
-        // Use requestAnimationFrame for immediate rendering after layout
-        const frameId = requestAnimationFrame(() => {
-            const scatterplotD3 = new ScatterplotD3(divContainerRef.current);
-            const size = getChartSize();
-            console.log("Scatterplot initial size:", size);
-            scatterplotD3.create({size: size});
-            scatterplotD3Ref.current = scatterplotD3;
+        const scatterplotD3 = new ScatterplotD3(divContainerRef.current);
+        const size = getChartSize();
+        console.log("Scatterplot initial size:", size);
+        scatterplotD3.create({size: size});
+        scatterplotD3Ref.current = scatterplotD3;
 
-            // Render initial data if available
-            if (scatterplotData && scatterplotData.length > 0) {
-                console.log("Rendering initial scatterplot data...");
-                const handleOnClick = function(itemData){
-                    console.log("handleOnClick ...")
-                    scatterplotControllerMethods.updateSelectedItems([itemData])
-                }
-                const handleOnMouseEnter = function(){
-                }
-                const handleOnMouseLeave = function(){
-                }
-                const handleBrushSelection = function(selectedItems){
-                    console.log("handleBrushSelection ...", selectedItems.length)
-                    scatterplotControllerMethods.updateSelectedItems(selectedItems)
-                }
-
-                const controllerMethods={
-                    handleOnClick,
-                    handleOnMouseEnter,
-                    handleOnMouseLeave,
-                    handleBrushSelection
-                }
-                scatterplotD3.renderScatterplot(scatterplotData, xAttribute, yAttribute, controllerMethods);
-                scatterplotDataRef.current = scatterplotData;
+        // Render initial data if available
+        if (scatterplotData && scatterplotData.length > 0) {
+            console.log("Rendering initial scatterplot data...");
+            const handleOnClick = function(itemData){
+                console.log("handleOnClick ...")
+                scatterplotControllerMethods.updateSelectedItems([itemData])
             }
-        });
+            const handleOnMouseEnter = function(){
+            }
+            const handleOnMouseLeave = function(){
+            }
+            const handleBrushSelection = function(selectedItems){
+                console.log("handleBrushSelection ...", selectedItems.length)
+                scatterplotControllerMethods.updateSelectedItems(selectedItems)
+            }
+
+            const controllerMethods={
+                handleOnClick,
+                handleOnMouseEnter,
+                handleOnMouseLeave,
+                handleBrushSelection
+            }
+            scatterplotD3.renderScatterplot(scatterplotData, xAttribute, yAttribute, controllerMethods);
+            scatterplotDataRef.current = scatterplotData;
+        }
 
         return ()=>{
             // did unmout, the return function is called once the component did unmount (removed for the screen)
             console.log("ScatterplotContainer useEffect [] return function, called when the component did unmount...");
-            cancelAnimationFrame(frameId);
             const scatterplotD3 = scatterplotD3Ref.current;
             if (scatterplotD3) {
                 scatterplotD3.clear()

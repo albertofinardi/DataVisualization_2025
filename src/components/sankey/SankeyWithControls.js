@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Sankey.css';
 import SankeyD3 from './Sankey-d3';
+import DimensionControls from './DimensionControls';
 
 function SankeyWithControls({ sankeyData, selectedItems, sankeyControllerMethods, selectionSource, onClearSelection }) {
     const divContainerRef = useRef(null);
     const sankeyD3Ref = useRef(null);
-    const [draggedDimension, setDraggedDimension] = useState(null);
 
     // State for dimension management
     const [activeDimensions, setActiveDimensions] = useState([
@@ -17,113 +17,17 @@ function SankeyWithControls({ sankeyData, selectedItems, sankeyControllerMethods
         'airconditioning', 'prefarea'
     ]);
 
-    // Format dimension names for display
-    const formatDimensionName = (dim) => {
-        const names = {
-            'bedrooms': 'Bedrooms',
-            'bathrooms': 'Bathrooms',
-            'stories': 'Stories',
-            'parking': 'Parking',
-            'mainroad': 'Main Road',
-            'guestroom': 'Guest Room',
-            'basement': 'Basement',
-            'hotwaterheating': 'Hot Water',
-            'airconditioning': 'Air Conditioning',
-            'prefarea': 'Preferred Area',
-            'furnishingstatus': 'Furnishing'
-        };
-        return names[dim] || dim;
+    // Handle dimension changes from DimensionControls
+    const handleDimensionChange = ({ active, available }) => {
+        setActiveDimensions(active);
+        setAvailableDimensions(available);
     };
 
-    // Handle drag start
-    const handleDragStart = (e, dimension, fromActive) => {
-        setDraggedDimension({ dimension, fromActive });
-        e.dataTransfer.effectAllowed = 'move';
-    };
-
-    // Handle drag over
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    };
-
-    // Handle drop on active dimensions
-    const handleDropOnActive = (e, dropIndex) => {
-        e.preventDefault();
-
-        if (!draggedDimension) return;
-
-        const { dimension, fromActive } = draggedDimension;
-
-        if (fromActive) {
-            // Reordering within active dimensions
-            const currentIndex = activeDimensions.indexOf(dimension);
-            if (currentIndex === dropIndex) return;
-
-            const newActive = [...activeDimensions];
-            newActive.splice(currentIndex, 1);
-            newActive.splice(dropIndex, 0, dimension);
-
-            setActiveDimensions(newActive);
-        } else {
-            // Adding from available to active
-            const newActive = [...activeDimensions];
-            newActive.splice(dropIndex, 0, dimension);
-            const newAvailable = availableDimensions.filter(d => d !== dimension);
-
-            setActiveDimensions(newActive);
-            setAvailableDimensions(newAvailable);
+    // Handle clear selection
+    const handleClearSelection = () => {
+        if (onClearSelection) {
+            onClearSelection();
         }
-
-        setDraggedDimension(null);
-    };
-
-    // Handle drop on available dimensions (remove from active)
-    const handleDropOnAvailable = (e) => {
-        e.preventDefault();
-
-        if (!draggedDimension) return;
-
-        const { dimension, fromActive } = draggedDimension;
-
-        if (fromActive && activeDimensions.length > 2) {
-            // Remove from active, add to available
-            const newActive = activeDimensions.filter(d => d !== dimension);
-            const newAvailable = [...availableDimensions, dimension];
-
-            setActiveDimensions(newActive);
-            setAvailableDimensions(newAvailable);
-        }
-
-        setDraggedDimension(null);
-    };
-
-    // Handle drag end
-    const handleDragEnd = () => {
-        setDraggedDimension(null);
-    };
-
-    // Handle click to add dimension
-    const handleAddDimension = (dimension) => {
-        const newActive = [...activeDimensions, dimension];
-        const newAvailable = availableDimensions.filter(d => d !== dimension);
-
-        setActiveDimensions(newActive);
-        setAvailableDimensions(newAvailable);
-    };
-
-    // Handle click to remove dimension
-    const handleRemoveDimension = (dimension) => {
-        if (activeDimensions.length <= 2) {
-            alert('You must keep at least 2 dimensions active');
-            return;
-        }
-
-        const newActive = activeDimensions.filter(d => d !== dimension);
-        const newAvailable = [...availableDimensions, dimension];
-
-        setActiveDimensions(newActive);
-        setAvailableDimensions(newAvailable);
     };
 
     const getChartSize = function() {
@@ -209,86 +113,14 @@ function SankeyWithControls({ sankeyData, selectedItems, sankeyControllerMethods
 
     return (
         <div className="sankey-with-controls">
-            {/* Dimension Controls - Compact */}
-            <div className="dimension-controls-compact">
-                <div className="dimension-row">
-                    <div className="dimension-section">
-                        <span className="dimension-label-compact"><strong>Active:</strong></span>
-                        <div
-                            className="dimension-chips-container-compact"
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                            }}
-                            onDrop={(e) => handleDropOnActive(e, activeDimensions.length)}
-                        >
-                            {activeDimensions.map((dimension, index) => (
-                                <div
-                                    key={dimension}
-                                    className={`dimension-chip-compact ${draggedDimension?.dimension === dimension ? 'dragging' : ''}`}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, dimension, true)}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDrop={(e) => handleDropOnActive(e, index)}
-                                    onDragEnd={handleDragEnd}
-                                >
-                                    <span>{formatDimensionName(dimension)}</span>
-                                    <button
-                                        className="remove-btn-compact"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRemoveDimension(dimension);
-                                        }}
-                                        title="Remove dimension"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="dimension-section">
-                        <span className="dimension-label-compact"><strong>Available:</strong></span>
-                        <div
-                            className="available-dimensions-compact"
-                            onDragOver={handleDragOver}
-                            onDrop={handleDropOnAvailable}
-                        >
-                            {availableDimensions.map((dimension) => (
-                                <div
-                                    key={dimension}
-                                    className="dimension-chip-compact available"
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, dimension, false)}
-                                    onDragEnd={handleDragEnd}
-                                    onClick={() => handleAddDimension(dimension)}
-                                >
-                                    <span>{formatDimensionName(dimension)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Legend */}
-                    <div className="dimension-section legend-section">
-                        <span className="dimension-label-compact"><strong>Legend:</strong></span>
-                        <div className="legend-items">
-                            <div className="legend-item">
-                                <div className="legend-box" style={{ backgroundColor: '#d3d3d3', border: '1px solid #999' }}></div>
-                                <span className="legend-text">Default</span>
-                            </div>
-                            <div className="legend-item">
-                                <div className="legend-box" style={{ backgroundColor: '#808080', border: '1px solid #333' }}></div>
-                                <span className="legend-text">Data flows</span>
-                            </div>
-                            <div className="legend-item">
-                                <div className="legend-box" style={{ backgroundColor: '#ff6b6b', border: '1px solid #d63031' }}></div>
-                                <span className="legend-text">Selected</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {/* Dimension Controls using DimensionControls component */}
+            <DimensionControls
+                activeDimensions={activeDimensions}
+                availableDimensions={availableDimensions}
+                selectedCount={selectedItems.length}
+                onDimensionChange={handleDimensionChange}
+                onClearSelection={handleClearSelection}
+            />
 
             {/* Sankey Diagram */}
             <div ref={divContainerRef} className="sankeyDivContainer">

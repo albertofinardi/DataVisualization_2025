@@ -1,100 +1,100 @@
 import React, { useState } from 'react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { formatDimensionName } from './sankeyDataUtils';
+
+// Sortable chip component
+function SortableChip({ id, dimension, formatDimensionName, onRemove, canRemove, compact = false }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    const chipClass = compact ? 'dimension-chip-compact' : 'dimension-chip';
+    const btnClass = compact ? 'remove-btn-compact' : 'remove-btn';
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`${chipClass} ${isDragging ? 'dragging' : ''}`}
+            {...attributes}
+            {...listeners}
+        >
+            <span>{formatDimensionName(dimension)}</span>
+            {canRemove && (
+                <button
+                    className={btnClass}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove(dimension);
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    title="Remove dimension"
+                >
+                    ×
+                </button>
+            )}
+        </div>
+    );
+}
 
 function DimensionControls({ activeDimensions, availableDimensions, selectedCount, onDimensionChange, onClearSelection }) {
-    const [draggedDimension, setDraggedDimension] = useState(null);
+    const [activeId, setActiveId] = useState(null);
 
-    // Format dimension names for display
-    const formatDimensionName = (dim) => {
-        const names = {
-            'bedrooms': 'Bedrooms',
-            'bathrooms': 'Bathrooms',
-            'stories': 'Stories',
-            'parking': 'Parking',
-            'mainroad': 'Main Road',
-            'guestroom': 'Guest Room',
-            'basement': 'Basement',
-            'hotwaterheating': 'Hot Water',
-            'airconditioning': 'Air Conditioning',
-            'prefarea': 'Preferred Area',
-            'furnishingstatus': 'Furnishing'
-        };
-        return names[dim] || dim;
-    };
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
-    // Handle drag start
-    const handleDragStart = (e, dimension, fromActive) => {
-        setDraggedDimension({ dimension, fromActive });
-        e.dataTransfer.effectAllowed = 'move';
-    };
+    function handleDragStart(event) {
+        setActiveId(event.active.id);
+    }
 
-    // Handle drag over
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    };
+    function handleDragEnd(event) {
+        const { active, over } = event;
 
-    // Handle drop on active dimensions
-    const handleDropOnActive = (e, dropIndex) => {
-        e.preventDefault();
+        if (active.id !== over?.id) {
+            const oldIndex = activeDimensions.indexOf(active.id);
+            const newIndex = activeDimensions.indexOf(over.id);
 
-        if (!draggedDimension) return;
-
-        const { dimension, fromActive } = draggedDimension;
-
-        if (fromActive) {
-            // Reordering within active dimensions
-            const currentIndex = activeDimensions.indexOf(dimension);
-            if (currentIndex === dropIndex) return;
-
-            const newActive = [...activeDimensions];
-            newActive.splice(currentIndex, 1);
-            newActive.splice(dropIndex, 0, dimension);
+            const newActive = arrayMove(activeDimensions, oldIndex, newIndex);
 
             onDimensionChange({
                 active: newActive,
                 available: availableDimensions
             });
-        } else {
-            // Adding from available to active
-            const newActive = [...activeDimensions];
-            newActive.splice(dropIndex, 0, dimension);
-            const newAvailable = availableDimensions.filter(d => d !== dimension);
-
-            onDimensionChange({
-                active: newActive,
-                available: newAvailable
-            });
         }
 
-        setDraggedDimension(null);
-    };
-
-    // Handle drop on available dimensions (remove from active)
-    const handleDropOnAvailable = (e) => {
-        e.preventDefault();
-
-        if (!draggedDimension) return;
-
-        const { dimension, fromActive } = draggedDimension;
-
-        if (fromActive && activeDimensions.length > 2) {
-            // Remove from active, add to available
-            const newActive = activeDimensions.filter(d => d !== dimension);
-            const newAvailable = [...availableDimensions, dimension];
-
-            onDimensionChange({
-                active: newActive,
-                available: newAvailable
-            });
-        }
-
-        setDraggedDimension(null);
-    };
-
-    // Handle drag end
-    const handleDragEnd = () => {
-        setDraggedDimension(null);
-    };
+        setActiveId(null);
+    }
 
     // Handle click to add dimension
     const handleAddDimension = (dimension) => {
@@ -124,98 +124,102 @@ function DimensionControls({ activeDimensions, availableDimensions, selectedCoun
     };
 
     return (
-        <div className="dimension-controls">
-            {selectedCount > 0 && (
-                <div style={{ marginBottom: '15px', padding: '10px', background: '#e8f5e9', borderRadius: '4px', border: '1px solid #4caf50', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div className="dimension-label" style={{ margin: 0 }}>
-                        <strong>Selected:</strong> {selectedCount} house{selectedCount !== 1 ? 's' : ''}
-                    </div>
-                    <button
-                        onClick={onClearSelection}
-                        style={{
-                            padding: '4px 12px',
-                            background: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                        }}
-                    >
-                        Clear Selection
-                    </button>
-                </div>
-            )}
-            <div>
-                <div className="dimension-label">
-                    <strong>Active Dimensions</strong> (drag to reorder)
-                </div>
-                <div
-                    className="dimension-chips-container"
-                    onDragOver={(e) => {
-                        e.preventDefault();
-                    }}
-                    onDrop={(e) => handleDropOnActive(e, activeDimensions.length)}
-                >
-                    {activeDimensions.map((dimension, index) => (
-                        <div
-                            key={dimension}
-                            className={`dimension-chip ${draggedDimension?.dimension === dimension ? 'dragging' : ''}`}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, dimension, true)}
-                            onDragOver={(e) => handleDragOver(e, index)}
-                            onDrop={(e) => handleDropOnActive(e, index)}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <span>{formatDimensionName(dimension)}</span>
-                            <button
-                                className="remove-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveDimension(dimension);
-                                }}
-                                title="Remove dimension"
+        <div className="dimension-controls-compact">
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+            >
+                <div className="dimension-row">
+                    <div className="dimension-section">
+                        <span className="dimension-label-compact"><strong>Active:</strong></span>
+                        <div className="dimension-chips-container-compact">
+                            <SortableContext
+                                items={activeDimensions}
+                                strategy={horizontalListSortingStrategy}
                             >
-                                ×
+                                {activeDimensions.map((dimension) => (
+                                    <SortableChip
+                                        key={dimension}
+                                        id={dimension}
+                                        dimension={dimension}
+                                        formatDimensionName={formatDimensionName}
+                                        onRemove={handleRemoveDimension}
+                                        canRemove={activeDimensions.length > 2}
+                                        compact={true}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </div>
+                    </div>
+
+                    <div className="dimension-section">
+                        <span className="dimension-label-compact"><strong>Available:</strong></span>
+                        <div className="available-dimensions-compact">
+                            {availableDimensions.map((dimension) => (
+                                <div
+                                    key={dimension}
+                                    className="dimension-chip-compact available"
+                                    onClick={() => handleAddDimension(dimension)}
+                                >
+                                    <span>{formatDimensionName(dimension)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {selectedCount > 0 && (
+                        <div className="dimension-section">
+                            <span className="dimension-label-compact"><strong>Selected:</strong></span>
+                            <span className="dimension-label-compact" style={{ marginRight: '8px' }}>
+                                {selectedCount} house{selectedCount !== 1 ? 's' : ''}
+                            </span>
+                            <button
+                                onClick={onClearSelection}
+                                style={{
+                                    padding: '3px 10px',
+                                    background: '#dc3545',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px'
+                                }}
+                            >
+                                Clear
                             </button>
                         </div>
-                    ))}
-                    {activeDimensions.length === 0 && (
-                        <span style={{ color: '#999', fontSize: '12px' }}>
-                            Drag dimensions here
-                        </span>
                     )}
-                </div>
-            </div>
 
-            <div style={{ marginTop: '15px' }}>
-                <div className="dimension-label">
-                    <strong>Available Dimensions</strong> (click or drag to add)
-                </div>
-                <div
-                    className="available-dimensions"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDropOnAvailable}
-                >
-                    {availableDimensions.map((dimension) => (
-                        <div
-                            key={dimension}
-                            className="dimension-chip available"
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, dimension, false)}
-                            onDragEnd={handleDragEnd}
-                            onClick={() => handleAddDimension(dimension)}
-                        >
-                            <span>{formatDimensionName(dimension)}</span>
+                    {/* Legend */}
+                    <div className="dimension-section legend-section">
+                        <span className="dimension-label-compact"><strong>Legend:</strong></span>
+                        <div className="legend-items">
+                            <div className="legend-item">
+                                <div className="legend-box" style={{ backgroundColor: '#d3d3d3', border: '1px solid #999' }}></div>
+                                <span className="legend-text">Default</span>
+                            </div>
+                            <div className="legend-item">
+                                <div className="legend-box" style={{ backgroundColor: '#808080', border: '1px solid #333' }}></div>
+                                <span className="legend-text">Data flows</span>
+                            </div>
+                            <div className="legend-item">
+                                <div className="legend-box" style={{ backgroundColor: '#ff6b6b', border: '1px solid #d63031' }}></div>
+                                <span className="legend-text">Selected</span>
+                            </div>
                         </div>
-                    ))}
-                    {availableDimensions.length === 0 && (
-                        <span style={{ color: '#999', fontSize: '12px' }}>
-                            All dimensions are active
-                        </span>
-                    )}
+                    </div>
                 </div>
-            </div>
+
+                <DragOverlay>
+                    {activeId ? (
+                        <div className="dimension-chip-compact dragging-overlay">
+                            <span>{formatDimensionName(activeId)}</span>
+                        </div>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
         </div>
     );
 }
