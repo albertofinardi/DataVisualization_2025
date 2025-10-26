@@ -1,0 +1,68 @@
+.App {
+    text-align: center;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.visualization-grid {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.scatterplot-row {
+    height: 40%;
+    width: 100%;
+    border-bottom: 2px solid #ddd;
+}
+
+.sankey-row {
+    height: 60%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sankey-with-controls {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.dimension-controls {
+    flex-shrink: 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.dimension-controls-compact {
+    flex-shrink: 0;
+}
+
+.sankeyDivContainer {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+/* Keep old styles for backward compatibility */
+#MultiviewContainer{
+    height: 100%;
+}
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+.col2{
+    float: left;
+    width: 50%;
+}

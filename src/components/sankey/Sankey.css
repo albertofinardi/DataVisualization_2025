@@ -1,0 +1,282 @@
+.sankeyDivContainer {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+/* Node colors are controlled by D3 based on selection state */
+.sankey-node rect {
+    /* fill and stroke are set dynamically by D3 */
+}
+
+.sankey-node.selected rect {
+    /* Selected state is handled by D3 updateNodeHighlighting */
+}
+
+.sankey-node text {
+    font-size: 12px;
+    pointer-events: none;
+    fill: #333;
+}
+
+.sankey-link {
+    fill: none;
+    stroke: #ccc;
+    stroke-opacity: 0.5;
+    cursor: pointer;
+}
+
+.sankey-link:hover {
+    stroke-opacity: 0.7;
+}
+
+.sankey-link.selected {
+    stroke: #ff6b6b;
+    stroke-opacity: 0.8;
+    stroke-width: 3px;
+}
+
+.overlay-path {
+    fill: none;
+    stroke: #00b894;
+    stroke-width: 2px;
+    stroke-opacity: 1;
+    pointer-events: none;
+}
+
+.sankey-tooltip {
+    position: absolute;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+}
+
+.dimension-controls {
+    margin: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.dimension-controls h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.dimension-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+    min-height: 40px;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    border: 2px dashed #ddd;
+}
+
+.dimension-chip {
+    padding: 6px 12px;
+    background: #0984e3;
+    color: white;
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: move;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.dimension-chip:hover {
+    background: #0652dd;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.dimension-chip.dragging {
+    opacity: 0.5;
+}
+
+.dimension-chip .remove-btn {
+    background: rgba(255,255,255,0.3);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.dimension-chip .remove-btn:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+.available-dimensions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dimension-chip.available {
+    background: #dfe6e9;
+    color: #2d3436;
+    cursor: pointer;
+}
+
+.dimension-chip.available:hover {
+    background: #b2bec3;
+}
+
+.dimension-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #555;
+}
+
+/* Brush styling for Sankey */
+.sankeyDivContainer .brush .overlay {
+    cursor: crosshair;
+}
+
+.sankeyDivContainer .brush .selection {
+    fill: #00b894;
+    fill-opacity: 0.2;
+    stroke: #00b894;
+    stroke-width: 2px;
+    stroke-opacity: 0.8;
+}
+
+/* Compact Dimension Controls */
+.dimension-controls-compact {
+    padding: 5px 10px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+
+.dimension-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dimension-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dimension-label-compact {
+    font-size: 11px;
+    color: #555;
+    white-space: nowrap;
+}
+
+.dimension-chips-container-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.available-dimensions-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.dimension-chip-compact {
+    padding: 3px 8px;
+    background: #0984e3;
+    color: white;
+    border-radius: 12px;
+    font-size: 10px;
+    cursor: move;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.dimension-chip-compact:hover {
+    background: #0652dd;
+    transform: translateY(-1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.dimension-chip-compact.dragging {
+    opacity: 0.5;
+}
+
+.dimension-chip-compact .remove-btn-compact {
+    background: rgba(255,255,255,0.3);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 0;
+}
+
+.dimension-chip-compact .remove-btn-compact:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+.dimension-chip-compact.available {
+    background: #dfe6e9;
+    color: #2d3436;
+    cursor: pointer;
+}
+
+.dimension-chip-compact.available:hover {
+    background: #b2bec3;
+}
+
+/* Legend styling */
+.legend-section {
+    margin-left: auto;
+}
+
+.legend-items {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.legend-text {
+    font-size: 10px;
+    color: #555;
+    white-space: nowrap;
+}
