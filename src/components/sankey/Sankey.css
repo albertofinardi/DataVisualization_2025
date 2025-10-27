@@ -1,207 +1,205 @@
 .sankeyDivContainer {
-    height: 100%;
-    width: 100%;
-    position: relative;
+  height: 100%;
+  width: 100%;
+  position: relative;
 }
 
 /* Node rectangle states */
 .sankey-node rect {
-    transition: fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
+  transition: fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
 }
 
 /* Default node state - light gray */
 .sankey-node.node-default rect {
-    fill: #d3d3d3;
-    stroke: #999;
-    stroke-width: 1;
+  fill: #d3d3d3;
+  stroke: #999;
+  stroke-width: 1;
 }
 
 /* Node state when selected data flows through it - darker gray */
 .sankey-node.node-data-flow rect {
-    fill: #808080;
-    stroke: #333;
-    stroke-width: 1;
+  fill: #808080;
+  stroke: #333;
+  stroke-width: 1;
 }
 
 /* Node state when selected by clicking - orange/red */
 .sankey-node.node-selected rect {
-    fill: #ff6b6b;
-    stroke: #d63031;
-    stroke-width: 3;
+  fill: #ff6b6b;
+  stroke: #d63031;
+  stroke-width: 3;
 }
 
 .sankey-node text {
-    font-size: 12px;
-    pointer-events: none;
-    fill: #333;
+  font-size: 12px;
+  pointer-events: none;
+  fill: #333;
 }
 
-/* Flow ribbon styling - filled areas like d3-sankey */
+/* Flow ribbon styling */
 .sankey-link {
-    fill: #999;
-    fill-opacity: 0.3;
-    stroke: none;
-    cursor: pointer;
-    transition: fill 0.2s ease, fill-opacity 0.2s ease;
+  fill: #999;
+  fill-opacity: 0.3;
+  stroke: none;
+  cursor: pointer;
+  transition: fill 0.2s ease, fill-opacity 0.2s ease;
 }
 
 .sankey-link:hover {
-    fill-opacity: 0.6;
+  fill-opacity: 0.6;
 }
 
 /* Link state when data flows through it */
 .sankey-link.link-selected {
-    fill: #00b894;
-    fill-opacity: 0.6;
+  fill: #00b894;
+  fill-opacity: 0.6;
 }
 
 /* Link state when dimmed (selection exists but doesn't flow through this link) */
 .sankey-link.link-dimmed {
-    fill-opacity: 0.2;
+  fill-opacity: 0.2;
 }
 
 .sankey-tooltip {
-    position: absolute;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    border-radius: 4px;
-    font-size: 12px;
-    pointer-events: none;
-    z-index: 1000;
-    display: none;
+  position: absolute;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
 }
 
 /* Brush styling for Sankey */
 .sankeyDivContainer .brush .overlay {
-    cursor: crosshair;
+  cursor: crosshair;
 }
 
 .sankeyDivContainer .brush .selection {
-    fill: #00b894;
-    fill-opacity: 0.2;
-    stroke: #00b894;
-    stroke-width: 2px;
-    stroke-opacity: 0.8;
+  fill: #00b894;
+  fill-opacity: 0.2;
+  stroke: #00b894;
+  stroke-width: 2px;
+  stroke-opacity: 0.8;
 }
 
-/* Compact Dimension Controls */
 .dimension-controls-compact {
-    padding: 5px 10px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ddd;
+  padding: 5px 10px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
 }
 
 .dimension-row {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .dimension-section {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .dimension-label-compact {
-    font-size: 11px;
-    color: #555;
-    white-space: nowrap;
+  font-size: 11px;
+  color: #555;
+  white-space: nowrap;
 }
 
 .dimension-chips-container-compact {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .available-dimensions-compact {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .dimension-chip-compact {
-    padding: 3px 8px;
-    background: #0984e3;
-    color: white;
-    border-radius: 12px;
-    font-size: 10px;
-    cursor: move;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    user-select: none;
-    transition: all 0.2s;
+  padding: 3px 8px;
+  background: #0984e3;
+  color: white;
+  border-radius: 12px;
+  font-size: 10px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+  transition: all 0.2s;
 }
 
 .dimension-chip-compact:hover {
-    background: #0652dd;
-    transform: translateY(-1px);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  background: #0652dd;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .dimension-chip-compact.dragging {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 
 .dimension-chip-compact .remove-btn-compact {
-    background: rgba(255,255,255,0.3);
-    border: none;
-    color: white;
-    border-radius: 50%;
-    width: 14px;
-    height: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 11px;
-    line-height: 1;
-    padding: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
 }
 
 .dimension-chip-compact .remove-btn-compact:hover {
-    background: rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .dimension-chip-compact.available {
-    background: #dfe6e9;
-    color: #2d3436;
-    cursor: pointer;
+  background: #dfe6e9;
+  color: #2d3436;
+  cursor: pointer;
 }
 
 .dimension-chip-compact.available:hover {
-    background: #b2bec3;
+  background: #b2bec3;
 }
 
-/* Legend styling */
 .legend-section {
-    margin-left: auto;
+  margin-left: auto;
 }
 
 .legend-items {
-    display: flex;
-    gap: 10px;
-    align-items: center;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .legend-box {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
 }
 
 .legend-text {
-    font-size: 10px;
-    color: #555;
-    white-space: nowrap;
+  font-size: 10px;
+  color: #555;
+  white-space: nowrap;
 }

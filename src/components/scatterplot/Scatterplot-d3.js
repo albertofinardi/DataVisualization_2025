@@ -7,7 +7,6 @@ class ScatterplotD3 {
     height;
     width;
     matSvg;
-    // add specific class properties used for the vis render/updates
     defaultOpacity=0.3;
     transitionDuration=1000;
     circleRadius = 3;
@@ -16,7 +15,7 @@ class ScatterplotD3 {
     brush;
     brushG;
     allData = [];
-    isClearing = false; // Flag to prevent clearing selection when removing brush visual
+    isClearing = false; 
 
 
     constructor(el){
@@ -26,11 +25,9 @@ class ScatterplotD3 {
     create = function (config) {
         this.size = {width: config.size.width, height: config.size.height};
 
-        // get the effect size of the view by subtracting the margin
         this.width = this.size.width - this.margin.left - this.margin.right;
         this.height = this.size.height - this.margin.top - this.margin.bottom ;
-        console.log("create SVG width=" + (this.width + this.margin.left + this.margin.right ) + " height=" + (this.height+ this.margin.top + this.margin.bottom));
-        // initialize the svg and keep it in a class property to reuse it in renderScatterplot()
+
         this.matSvg=d3.select(this.el).append("svg")
             .attr("width", this.width + this.margin.left + this.margin.right)
             .attr("height", this.height + this.margin.top + this.margin.bottom)
@@ -42,7 +39,6 @@ class ScatterplotD3 {
         this.xScale = d3.scaleLinear().range([0,this.width]);
         this.yScale = d3.scaleLinear().range([this.height,0]);
 
-        // build xAxisG
         this.matSvg.append("g")
             .attr("class","xAxisG")
             .attr("transform","translate(0,"+this.height+")")
@@ -51,11 +47,9 @@ class ScatterplotD3 {
             .attr("class","yAxisG")
         ;
 
-        // Initialize brush
         this.brush = d3.brush()
             .extent([[0, 0], [this.width, this.height]]);
 
-        // Add brush group
         this.brushG = this.matSvg.append("g")
             .attr("class", "brush");
     }
@@ -70,11 +64,9 @@ class ScatterplotD3 {
     }
 
     updateMarkers(selection,xAttribute,yAttribute){
-        // transform selection
         selection
             .transition().duration(this.transitionDuration)
             .attr("transform", (item)=>{
-                // use scales to return shape position from data values
                 const xPos = this.xScale(item[xAttribute]);
                 const yPos = this.yScale(item[yAttribute]);
                 return "translate("+xPos+","+yPos+")";
@@ -124,8 +116,6 @@ class ScatterplotD3 {
 
 
     renderScatterplot = function (visData, xAttribute, yAttribute, controllerMethods){
-        console.log("render scatterplot with a new data list ...")
-
         // Store data for brush selection
         this.allData = visData;
 

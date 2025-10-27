@@ -54,7 +54,6 @@ export function generateSankeyData(data, dimensions) {
     return { nodes, links };
   }
 
-  // Create nodes for each dimension value
   dimensions.forEach((dim, dimIndex) => {
     const uniqueValues = [...new Set(data.map((d) => d[dim]))].sort();
     uniqueValues.forEach((value) => {
@@ -73,12 +72,10 @@ export function generateSankeyData(data, dimensions) {
     });
   });
 
-  // Create links between consecutive dimensions
   for (let i = 0; i < dimensions.length - 1; i++) {
     const sourceDim = dimensions[i];
     const targetDim = dimensions[i + 1];
 
-    // Count transitions and store houses
     const transitions = new Map();
     data.forEach((house) => {
       const sourceId = `${sourceDim}-${house[sourceDim]}`;
@@ -96,7 +93,6 @@ export function generateSankeyData(data, dimensions) {
       transition.houses.push(house);
     });
 
-    // Create links
     transitions.forEach((transitionData, key) => {
       const [sourceId, targetId] = key.split("->");
       links.push({
@@ -128,3 +124,20 @@ export const formatDimensionName = (dim) => {
   };
   return names[dim] || dim;
 };
+
+export const defaultActiveDimensions = [
+  "bedrooms",
+  "bathrooms",
+  "furnishingstatus",
+  "mainroad",
+  "parking",
+];
+
+export const defaultAvailableDimensions = [
+  "stories",
+  "guestroom",
+  "basement",
+  "hotwaterheating",
+  "airconditioning",
+  "prefarea",
+];
