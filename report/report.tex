@@ -1,0 +1,150 @@
+%%
+%% Individual Assignment - Data Visualization Course
+%% Interactive Housing Data Visualization with React and D3.js
+%%
+\documentclass[sigplan,screen]{acmart}
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+%% Rights management information removed for student report
+\setcopyright{none}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\settopmatter{printacmref=false} % Remove ACM reference format
+
+%% Remove conference information
+\acmConference[High Performance Data Analytics and Visualisation]{Data Visualization Course Individual Assignment}{Jan 2025}{University of Luxembourg}
+
+
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{Interactive Housing Data Visualization: Synchronized Scatterplot and Sankey Diagram}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+\author{Alberto Finardi}
+\email{alberto.finardi.001@student.uni.lu}
+\affiliation{%
+  \institution{University of Luxembourg}
+  \country{Luxembourg}
+}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+  This report describes an interactive data visualization system for exploring housing market data through two synchronized views: a scatterplot displaying continuous attributes (area vs. price) and a Sankey diagram representing categorical dimensions and their relationships. The system implements bidirectional brushing and linking interactions, allowing users to select data points in either visualization and observe corresponding highlights in both views. A key design decision involves treating discrete quantitative attributes (bedrooms, bathrooms, stories, parking spaces) as categorical variables due to their small finite domains, enabling effective flow visualization in the Sankey diagram. The implementation follows React and D3.js design patterns with centralized state management for cross-visualization synchronization.
+\end{abstract}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+% \keywords{Data Visualization, Interactive Visualization, Brushing and Linking, Scatterplot, Sankey Diagram, React, D3.js}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\section{Introduction}
+
+Understanding housing market data requires exploring both continuous attributes (e.g., price, area) and categorical features (e.g., number of bedrooms, amenities). This assignment implements two synchronized interactive visualizations to support multivariate data exploration: a \textbf{scatterplot} for analyzing continuous relationships and a \textbf{Sankey diagram} for visualizing categorical distributions and flows between dimensions.
+
+The visualizations are implemented using React for component management and D3.js for rendering, following modern separation of concerns patterns. User interactions in either visualization are immediately reflected in both views through a centralized state management system, enabling coordinated exploration of the housing dataset from multiple perspectives.
+
+This report describes the visual encoding choices, justifies the treatment of discrete numeric attributes as categorical variables, explains the interaction mechanisms, and discusses the strengths and limitations of the design.
+
+\section{Dataset Characteristics}
+
+The Housing.csv dataset contains 545 housing records with 13 attributes:
+\begin{itemize}
+\item \textbf{Continuous}: Price and area (used in scatterplot)
+\item \textbf{Discrete quantitative}: Bedrooms (1-6), bathrooms (1-4), stories (1-4), parking (0-3)
+\item \textbf{Binary}: Main road, guest room, basement, hot water, air conditioning, preferred area
+\item \textbf{Nominal}: Furnishing status (3 levels)
+\end{itemize}
+
+The discrete quantitative and categorical attributes (10 total) are treated as categorical in the Sankey diagram due to their small finite domains (2-6 distinct values each).
+
+\subsection{Rationale for Treating Discrete Numerics as Categorical}
+
+This design choice is justified by: (1) \textbf{small cardinality} (4-6 values per attribute), (2) \textbf{semantic discontinuity} (3 vs. 4 bedrooms represents distinct market categories, not a continuous scale), and (3) \textbf{visual effectiveness} - Sankey diagrams excel at showing flows and distributions across categorical dimensions, revealing patterns like "most 4-bedroom houses have 2-3 bathrooms" that would be obscured in continuous representations.
+
+\subsection{Evolution from Parallel Coordinates to Sankey Diagram}
+
+The Sankey diagram emerged after an initial \textbf{parallel coordinates} implementation failed due to severe overplotting. With only 2-6 distinct values per attribute, most data records collapsed onto identical parallel paths, making it impossible to distinguish relative frequencies or identify common versus rare transitions. The Sankey diagram solved this by encoding frequency in node heights and link widths, allocating vertical space proportionally to category counts, and providing clear flow visualization through ribbon-style links.
+
+\section{Visual Encoding Design}
+
+\subsection{Scatterplot}
+
+The scatterplot uses standard positional encoding (x: area, y: price) with circles as marks. Selected points are highlighted with red strokes and full opacity, while unselected points have 0.3 opacity to reveal density patterns. This view was already implemented and serves as the continuous attribute exploration component.
+
+\subsection{Sankey Diagram: Categorical Flow Visualization}
+
+\textbf{Key Design Elements:}
+\begin{itemize}
+\item \textbf{Nodes}: Rectangles with height proportional to category frequency, sorted top to bottom by count. Three state coloring: default (light gray), data-flow (dark gray), selected (red).
+\item \textbf{Links}: Ribbons with width proportional to flow count between categories. Selected flows highlighted in green (0.6 opacity), others dimmed (0.2-0.3).
+\item \textbf{Labels}: Show category name and counts (e.g., "3 (127)" for 127 houses with value 3).
+\item \textbf{Dimension controls}: Drag and drop to reorder, click to add/remove dimensions (minimum 2 enforced).
+\end{itemize}
+
+The area encoding (node height, link width) effectively communicates univariate distributions, bivariate relationships between adjacent dimensions, and multivariate patterns across the full flow sequence.
+
+\section{Interaction Mechanisms and Synchronization}
+
+The system implements bidirectional brushing and linking with centralized state management (\texttt{selectedItems} and \texttt{selectionSource}) in the App component.
+
+\textbf{Scatterplot Brushing:} Users drag a rectangular region to select multiple points or click individual points. The D3 brush component detects points within selection bounds, then automatically clears the brush visual (100ms delay) while preserving selection state. This is the primary new interaction implemented for this assignment.
+
+\textbf{Sankey Selection:} Users click nodes (toggles selection) or links (selects both endpoints). The filtering logic implements \textbf{OR within dimensions, AND across dimensions}:
+\begin{itemize}
+\item \textbf{Within same dimension (OR):} Selecting "3 bedrooms" and "4 bedrooms" shows houses with \textit{either} 3 or 4 bedrooms. This allows comparing different categories within the same attribute.
+\item \textbf{Across different dimensions (AND):} Selecting "3 bedrooms" and "main road: yes" shows only houses with \textit{both} 3 bedrooms and main road access. This enables filtering to specific combinations.
+\end{itemize}
+This logic aligns with intuitive data exploration - users typically want to compare alternatives within a dimension but apply constraints across dimensions.
+
+\textbf{Synchronization:} When scatterplot is brushed, the Sankey highlights affected nodes/links and updates labels to show "matching/total" counts. When Sankey nodes are clicked, filtered houses are highlighted in the scatterplot with red strokes and full opacity. The \texttt{selectionSource} tracking prevents conflicting updates.
+
+\section{Design Evaluation}
+
+\subsection{Strengths}
+
+\textbf{Complementary perspectives:} The scatterplot reveals continuous correlations while the Sankey shows categorical distributions and flows, providing comprehensive coverage of heterogeneous attributes.
+
+\textbf{Flexible exploration:} Dynamic dimension management (add/remove/reorder) enables hypothesis testing. Bidirectional linking supports natural workflows: "Show categorical profiles of expensive houses" (scatterplot → Sankey) or "Where do 4-bedroom furnished houses fall on price-area?" (Sankey → scatterplot).
+
+\textbf{Clear feedback:} Three state node coloring and dynamic label updates ("matching/total") provide immediate selection feedback across views.
+
+\textbf{Effective categorical treatment:} Reveals market segmentation patterns (e.g., dominant 2-3 bedroom with 1-2 bathroom combinations) that continuous representations would obscure.
+
+\subsection{Limitations}
+
+\textbf{Scalability:} Visual clutter emerges with 7+ dimensions or high cardinality attributes. Small frequency categories create thin, hard to interact with nodes.
+
+\textbf{Lost ordinality:} Treating bedrooms/bathrooms as categorical discards ordinal information - "4 bedrooms" doesn't visually appear as twice "2 bedrooms."
+
+\textbf{Synchronization constraints:} Brushing the scatterplot clears manual Sankey selections, preventing hybrid manual+automatic filtering workflows.
+
+\textbf{No statistical summaries:} Users must visually estimate distributions without access to quantitative statistics (mean, median, quartiles).
+
+\section{Conclusion}
+
+This project implements a synchronized dual view system combining a scatterplot (continuous attributes) with a Sankey diagram (categorical flows). A critical design choice was treating discrete quantitative attributes (bedrooms, bathrooms, stories, parking) as categorical, justified by their small finite domains and semantic discontinuity. This enabled flow visualization revealing market segmentation patterns that continuous representations would obscure, as demonstrated by the failed parallel coordinates prototype where severe overplotting made patterns indistinguishable.
+
+The bidirectional brushing and linking interaction, implemented through React's centralized state management, creates a seamless exploratory experience. Users can fluidly ask "what categories characterize expensive houses?" (scatterplot → Sankey) or "where do specific categorical combinations fall in price-area space?" (Sankey → scatterplot).
+
+The implementation follows React and D3.js design patterns with clear separation between component lifecycle management and visualization rendering.
+
+
+\end{document}
