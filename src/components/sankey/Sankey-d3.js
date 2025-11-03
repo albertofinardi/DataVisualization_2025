@@ -368,7 +368,7 @@ class SankeyD3 {
 
       // Determine visual state and apply appropriate CSS class
       // Three states:
-      // 1. node-default - default state, no selection
+      // 1. node-default - unselected state, no active selection
       // 2. node-data-flow - data selected from scatterplot flows through this node
       // 3. node-selected - box is selected by clicking
 

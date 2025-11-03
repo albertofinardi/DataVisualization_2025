@@ -4,6 +4,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: linear-gradient(135deg, #f9fcff 0%, #f5faff 100%);
 }
 
 .visualization-grid {
@@ -11,16 +12,45 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
+    padding: 1rem;
+    gap: 1rem;
+    box-sizing: border-box;
+}
+
+.viz-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.3s ease;
+}
+
+.viz-section:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.viz-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1976d2;
+    text-align: left;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #bbdefb;
 }
 
 .scatterplot-row {
-    height: 40%;
+    flex: 2;
+    min-height: 0;
     width: 100%;
-    border-bottom: 2px solid #ddd;
 }
 
 .sankey-row {
-    height: 60%;
+    flex: 3;
+    min-height: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -37,10 +67,12 @@
 
 .dimension-controls {
     flex-shrink: 0;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    margin-bottom: 10px;
+    padding: 1rem;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #90caf9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .dimension-controls-compact {
@@ -51,18 +83,4 @@
     flex: 1;
     min-height: 0;
     width: 100%;
-}
-
-/* Keep old styles for backward compatibility */
-#MultiviewContainer{
-    height: 100%;
-}
-.row:after {
-    content: "";
-    display: table;
-    clear: both;
-}
-.col2{
-    float: left;
-    width: 50%;
 }

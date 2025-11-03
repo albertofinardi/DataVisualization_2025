@@ -15,7 +15,7 @@
 \settopmatter{printacmref=false} % Remove ACM reference format
 
 %% Remove conference information
-\acmConference[High Performance Data Analytics and Visualisation]{Data Visualization Course Individual Assignment}{Jan 2025}{University of Luxembourg}
+\acmConference[High Performance Data Analytics and Visualisation]{High Performance Data Analytics and Visualisation}{Jan 2025}{University of Luxembourg}
 
 
 
@@ -26,7 +26,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{Interactive Housing Data Visualization: Synchronized Scatterplot and Sankey Diagram}
+\title[High Performance Data Analytics and Visualisation]{Interactive Housing Data Visualization: Synchronized Scatterplot and Sankey Diagram}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -93,8 +93,8 @@ The scatterplot uses standard positional encoding (x: area, y: price) with circl
 
 \textbf{Key Design Elements:}
 \begin{itemize}
-\item \textbf{Nodes}: Rectangles with height proportional to category frequency, sorted top to bottom by count. Three state coloring: default (light gray), data-flow (dark gray), selected (red).
-\item \textbf{Links}: Ribbons with width proportional to flow count between categories. Selected flows highlighted in green (0.6 opacity), others dimmed (0.2-0.3).
+\item \textbf{Nodes}: Rectangles with height proportional to category frequency, sorted top to bottom by count. Three state coloring: unselected (light gray \texttt{\#d3d3d3}), data-flow (dark gray \texttt{\#808080}), selected (red \texttt{\#ff6b6b}).
+\item \textbf{Links}: Ribbons with width proportional to flow count between categories. Color scheme uses shades of blue: default flows (light blue \texttt{\#64b5f6}, 0.2 opacity), selected flows (dark blue \texttt{\#1976d2}, 0.7 opacity), hover state (medium blue \texttt{\#42a5f5}, 0.7 opacity), dimmed flows (very light blue \texttt{\#90caf9}, 0.2 opacity).
 \item \textbf{Labels}: Show category name and counts (e.g., "3 (127)" for 127 houses with value 3).
 \item \textbf{Dimension controls}: Drag and drop to reorder, click to add/remove dimensions (minimum 2 enforced).
 \end{itemize}
@@ -105,14 +105,14 @@ The area encoding (node height, link width) effectively communicates univariate 
 
 The system implements bidirectional brushing and linking with centralized state management (\texttt{selectedItems} and \texttt{selectionSource}) in the App component.
 
-\textbf{Scatterplot Brushing:} Users drag a rectangular region to select multiple points or click individual points. The D3 brush component detects points within selection bounds, then automatically clears the brush visual (100ms delay) while preserving selection state. This is the primary new interaction implemented for this assignment.
+\textbf{Scatterplot Brushing:} Users drag a rectangular region to select multiple points or click individual points. The D3 brush component detects points within selection bounds, then automatically clears the brush visual (100ms delay) while preserving selection state. The axis domains include 5\% padding for easier brush interaction. This is the primary new interaction implemented for this assignment.
 
 \textbf{Sankey Selection:} Users click nodes (toggles selection) or links (selects both endpoints). The filtering logic implements \textbf{OR within dimensions, AND across dimensions}:
 \begin{itemize}
 \item \textbf{Within same dimension (OR):} Selecting "3 bedrooms" and "4 bedrooms" shows houses with \textit{either} 3 or 4 bedrooms. This allows comparing different categories within the same attribute.
 \item \textbf{Across different dimensions (AND):} Selecting "3 bedrooms" and "main road: yes" shows only houses with \textit{both} 3 bedrooms and main road access. This enables filtering to specific combinations.
 \end{itemize}
-This logic aligns with intuitive data exploration - users typically want to compare alternatives within a dimension but apply constraints across dimensions.
+This logic aligns with intuitive data exploration; users typically want to compare alternatives within a dimension but apply constraints across dimensions.
 
 \textbf{Synchronization:} When scatterplot is brushed, the Sankey highlights affected nodes/links and updates labels to show "matching/total" counts. When Sankey nodes are clicked, filtered houses are highlighted in the scatterplot with red strokes and full opacity. The \texttt{selectionSource} tracking prevents conflicting updates.
 
@@ -122,7 +122,7 @@ This logic aligns with intuitive data exploration - users typically want to comp
 
 \textbf{Complementary perspectives:} The scatterplot reveals continuous correlations while the Sankey shows categorical distributions and flows, providing comprehensive coverage of heterogeneous attributes.
 
-\textbf{Flexible exploration:} Dynamic dimension management (add/remove/reorder) enables hypothesis testing. Bidirectional linking supports natural workflows: "Show categorical profiles of expensive houses" (scatterplot → Sankey) or "Where do 4-bedroom furnished houses fall on price-area?" (Sankey → scatterplot).
+\textbf{Flexible exploration:} Dynamic dimension management (add/remove/reorder) enables hypothesis testing. Bidirectional linking supports natural workflows: "Show categorical profiles of expensive houses" (scatterplot -> Sankey) or "Where do 4-bedroom furnished houses fall on price-area?" (Sankey -> scatterplot).
 
 \textbf{Clear feedback:} Three state node coloring and dynamic label updates ("matching/total") provide immediate selection feedback across views.
 
@@ -138,11 +138,50 @@ This logic aligns with intuitive data exploration - users typically want to comp
 
 \textbf{No statistical summaries:} Users must visually estimate distributions without access to quantitative statistics (mean, median, quartiles).
 
+\section{Implementation Decisions}
+
+\subsection{Custom Sankey Implementation vs. d3-sankey Library}
+
+A significant implementation decision was to develop a custom Sankey diagram from scratch rather than using the official \texttt{d3-sankey} library from the D3 authors. While the official library provides robust, production-ready functionality, the custom implementation was chosen for several reasons:
+
+\textbf{Educational Value:} Implementing the Sankey layout algorithm manually provided deeper understanding of:
+\begin{itemize}
+\item Node positioning and height calculations based on data flow
+\item Link path generation using SVG Bézier curves
+\item Flow conservation principles in diagram layout
+\item State management for interactive highlighting and filtering
+\end{itemize}
+
+\textbf{Customization Flexibility:} The custom implementation enabled specific features tailored to this project:
+\begin{itemize}
+\item Fine-grained control over node and link styling with CSS variables
+\item Custom filtering logic (OR within dimensions, AND across dimensions)
+\item Seamless integration with React component lifecycle
+\item Specialized interaction patterns for bidirectional brushing and linking
+\item Dynamic dimension management (add/remove/reorder)
+\end{itemize}
+
+This approach prioritized learning outcomes and design control over using a pre-built solution.
+
+\subsection{Row-Based Layout for Optimal Interactivity}
+
+The application uses a row-based flexbox layout where visualizations are stacked vertically, with the scatterplot in the first row and the Sankey diagram in a larger second row. This design decision prioritizes the Sankey diagram's interactivity:
+
+\textbf{Rationale:} The Sankey diagram is designed to expand horizontally along the x-axis, as dimensions are arranged left to right and flows connect between adjacent columns. Providing full horizontal width allows users to add multiple dimensions without horizontal scrolling and enables clear visualization of flow paths across many categories.
+
+\textbf{Implementation:} The layout allocates 40\% vertical space to the scatterplot and 60\% to the Sankey diagram (using \texttt{flex: 2} and \texttt{flex: 3} respectively). This replaced an earlier column-based layout (using \texttt{.col2} with 50\% width floats) that constrained the Sankey's horizontal expansion.
+
+\textbf{Scatterplot flexibility:} Unlike the Sankey, the scatterplot's effectiveness is not orientation-dependent; it maintains its analytical value whether displayed in a wide or tall aspect ratio, making it suitable for the smaller first row.
+
+\section{Acknowledgments}
+
+The user interface styling and color scheme design were developed with assistance from AI tools, which provided suggestions for CSS gradients, spacing, and responsive layout patterns. The core visualization logic, data processing, interaction mechanisms, and React/D3.js integration were implemented manually based on course materials and D3.js documentation.
+
 \section{Conclusion}
 
 This project implements a synchronized dual view system combining a scatterplot (continuous attributes) with a Sankey diagram (categorical flows). A critical design choice was treating discrete quantitative attributes (bedrooms, bathrooms, stories, parking) as categorical, justified by their small finite domains and semantic discontinuity. This enabled flow visualization revealing market segmentation patterns that continuous representations would obscure, as demonstrated by the failed parallel coordinates prototype where severe overplotting made patterns indistinguishable.
 
-The bidirectional brushing and linking interaction, implemented through React's centralized state management, creates a seamless exploratory experience. Users can fluidly ask "what categories characterize expensive houses?" (scatterplot → Sankey) or "where do specific categorical combinations fall in price-area space?" (Sankey → scatterplot).
+The bidirectional brushing and linking interaction, implemented through React's centralized state management, creates a seamless exploratory experience. Users can fluidly ask "What categories characterize expensive houses?" (scatterplot -> Sankey) or "Where do specific categorical combinations fall in price-area space?" (Sankey -> scatterplot).
 
 The implementation follows React and D3.js design patterns with clear separation between component lifecycle management and visualization rendering.
 

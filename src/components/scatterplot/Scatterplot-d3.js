@@ -101,8 +101,13 @@ class ScatterplotD3 {
         const minYAxis = d3.min(visData.map((item)=>{return item[yAttribute]}));
         const maxYAxis = d3.max(visData.map((item)=>{return item[yAttribute]}));
 
-        this.xScale.domain([minXAxis,maxXAxis]);
-        this.yScale.domain([minYAxis,maxYAxis]);
+        // 5% padding to the domain
+        const xRange = maxXAxis - minXAxis;
+        const yRange = maxYAxis - minYAxis;
+        const padding = 0.05;
+
+        this.xScale.domain([minXAxis - xRange * padding, maxXAxis + xRange * padding]);
+        this.yScale.domain([minYAxis - yRange * padding, maxYAxis + yRange * padding]);
 
         // create axis with computed scales
         this.matSvg.select(".xAxisG")

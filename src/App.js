@@ -45,24 +45,30 @@ function App() {
             <div className="visualization-grid">
                 {/* First row: Scatterplot */}
                 <div className="scatterplot-row">
-                    <ScatterplotContainer
-                        scatterplotData={data}
-                        xAttribute={"area"}
-                        yAttribute={"price"}
-                        selectedItems={selectedItems}
-                        scatterplotControllerMethods={scatterplotControllerMethods}
-                    />
+                    <div className="viz-section">
+                        <h2 className="viz-title">Scatterplot View</h2>
+                        <ScatterplotContainer
+                            scatterplotData={data}
+                            xAttribute={"area"}
+                            yAttribute={"price"}
+                            selectedItems={selectedItems}
+                            scatterplotControllerMethods={scatterplotControllerMethods}
+                        />
+                    </div>
                 </div>
 
                 {/* Second row: Sankey with controls */}
                 <div className="sankey-row">
-                    <SankeyWithControls
-                        sankeyData={data}
-                        selectedItems={selectedItems}
-                        sankeyControllerMethods={sankeyControllerMethods}
-                        selectionSource={selectionSource}
-                        onClearSelection={() => setSelectedItems([])}
-                    />
+                    <div className="viz-section">
+                        <h2 className="viz-title">Sankey Diagram</h2>
+                        <SankeyWithControls
+                            sankeyData={data}
+                            selectedItems={selectedItems}
+                            sankeyControllerMethods={sankeyControllerMethods}
+                            selectionSource={selectionSource}
+                            onClearSelection={() => setSelectedItems([])}
+                        />
+                    </div>
                 </div>
             </div>
         </div>

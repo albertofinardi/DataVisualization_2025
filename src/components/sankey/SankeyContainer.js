@@ -93,7 +93,7 @@ function SankeyContainer({
     }
   }, [selectionSource]);
 
-  return <div ref={divContainerRef} className="sankeyDivContainer col2"></div>;
+  return <div ref={divContainerRef} className="sankeyDivContainer"></div>;
 }
 
 export default SankeyContainer;

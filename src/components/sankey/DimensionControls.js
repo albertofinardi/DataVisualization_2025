@@ -222,33 +222,21 @@ function DimensionControls({
             <div className="legend-items">
               <div className="legend-item">
                 <div
-                  className="legend-box"
-                  style={{
-                    backgroundColor: "#d3d3d3",
-                    border: "1px solid #999",
-                  }}
+                  className="legend-box legend-box-flow"
                 ></div>
-                <span className="legend-text">Default</span>
+                <span className="legend-text">Flow</span>
               </div>
               <div className="legend-item">
                 <div
-                  className="legend-box"
-                  style={{
-                    backgroundColor: "#808080",
-                    border: "1px solid #333",
-                  }}
+                  className="legend-box legend-box-selected-flow"
                 ></div>
-                <span className="legend-text">Data flows</span>
+                <span className="legend-text">Selected Flow</span>
               </div>
               <div className="legend-item">
                 <div
-                  className="legend-box"
-                  style={{
-                    backgroundColor: "#ff6b6b",
-                    border: "1px solid #d63031",
-                  }}
+                  className="legend-box legend-box-selected-node"
                 ></div>
-                <span className="legend-text">Selected</span>
+                <span className="legend-text">Selected Node</span>
               </div>
             </div>
           </div>

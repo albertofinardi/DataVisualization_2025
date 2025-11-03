@@ -1,3 +1,21 @@
+:root {
+  --sankey-link-default: #64b5f6;
+  --sankey-link-default-opacity: 0.2;
+  --sankey-link-hover: #42a5f5;
+  --sankey-link-hover-opacity: 0.7;
+  --sankey-link-selected: #1976d2;
+  --sankey-link-selected-opacity: 0.7;
+  --sankey-link-dimmed: #90caf9;
+  --sankey-link-dimmed-opacity: 0.2;
+
+  --sankey-node-default: #d3d3d3;
+  --sankey-node-default-stroke: #999;
+  --sankey-node-flow: #808080;
+  --sankey-node-flow-stroke: #333;
+  --sankey-node-selected: #ff6b6b;
+  --sankey-node-selected-stroke: #d63031;
+}
+
 .sankeyDivContainer {
   height: 100%;
   width: 100%;
@@ -9,24 +27,24 @@
   transition: fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
 }
 
-/* Default node state - light gray */
+/* Unselected node state - light gray */
 .sankey-node.node-default rect {
-  fill: #d3d3d3;
-  stroke: #999;
+  fill: var(--sankey-node-default);
+  stroke: var(--sankey-node-default-stroke);
   stroke-width: 1;
 }
 
 /* Node state when selected data flows through it - darker gray */
 .sankey-node.node-data-flow rect {
-  fill: #808080;
-  stroke: #333;
+  fill: var(--sankey-node-flow);
+  stroke: var(--sankey-node-flow-stroke);
   stroke-width: 1;
 }
 
 /* Node state when selected by clicking - orange/red */
 .sankey-node.node-selected rect {
-  fill: #ff6b6b;
-  stroke: #d63031;
+  fill: var(--sankey-node-selected);
+  stroke: var(--sankey-node-selected-stroke);
   stroke-width: 3;
 }
 
@@ -38,26 +56,28 @@
 
 /* Flow ribbon styling */
 .sankey-link {
-  fill: #999;
-  fill-opacity: 0.3;
+  fill: var(--sankey-link-default);
+  fill-opacity: var(--sankey-link-default-opacity);
   stroke: none;
   cursor: pointer;
   transition: fill 0.2s ease, fill-opacity 0.2s ease;
 }
 
 .sankey-link:hover {
-  fill-opacity: 0.6;
+  fill: var(--sankey-link-hover);
+  fill-opacity: var(--sankey-link-hover-opacity);
 }
 
 /* Link state when data flows through it */
 .sankey-link.link-selected {
-  fill: #00b894;
-  fill-opacity: 0.6;
+  fill: var(--sankey-link-selected);
+  fill-opacity: var(--sankey-link-selected-opacity);
 }
 
 /* Link state when dimmed (selection exists but doesn't flow through this link) */
 .sankey-link.link-dimmed {
-  fill-opacity: 0.2;
+  fill: var(--sankey-link-dimmed);
+  fill-opacity: var(--sankey-link-dimmed-opacity);
 }
 
 .sankey-tooltip {
@@ -196,6 +216,24 @@
   width: 12px;
   height: 12px;
   border-radius: 2px;
+}
+
+/* Legend box styles using CSS variables */
+.legend-box-flow {
+  background-color: var(--sankey-link-default);
+  opacity: var(--sankey-link-default-opacity);
+  border: 1px solid var(--sankey-link-default);
+}
+
+.legend-box-selected-flow {
+  background-color: var(--sankey-link-selected);
+  opacity: var(--sankey-link-selected-opacity);
+  border: 1px solid var(--sankey-link-selected);
+}
+
+.legend-box-selected-node {
+  background-color: var(--sankey-node-selected);
+  border: 1px solid var(--sankey-node-selected-stroke);
 }
 
 .legend-text {
