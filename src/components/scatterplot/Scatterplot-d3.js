@@ -47,6 +47,25 @@ class ScatterplotD3 {
             .attr("class","yAxisG")
         ;
 
+        // Add X axis label
+        this.matSvg.append("text")
+            .attr("class", "xAxisLabel")
+            .attr("text-anchor", "middle")
+            .attr("x", this.width / 2)
+            .attr("y", this.height + this.margin.bottom - 5)
+            .style("font-size", "12px")
+        ;
+
+        // Add Y axis label
+        this.matSvg.append("text")
+            .attr("class", "yAxisLabel")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -this.height / 2)
+            .attr("y", -this.margin.left + 15)
+            .style("font-size", "12px")
+        ;
+
         this.brush = d3.brush()
             .extent([[0, 0], [this.width, this.height]]);
 
@@ -117,6 +136,15 @@ class ScatterplotD3 {
         this.matSvg.select(".yAxisG")
             .transition().duration(500)
             .call(d3.axisLeft(this.yScale))
+        ;
+
+        // Update axis labels
+        this.matSvg.select(".xAxisLabel")
+            .text(xAttribute)
+        ;
+        this.matSvg.select(".yAxisLabel")
+            .text(yAttribute)
+        ;
     }
 
 
